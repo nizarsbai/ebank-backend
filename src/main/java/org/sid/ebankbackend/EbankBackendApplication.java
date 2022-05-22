@@ -1,18 +1,17 @@
 package org.sid.ebankbackend;
 
-import org.sid.ebankbackend.entities.AccountOperation;
-import org.sid.ebankbackend.entities.CurrentAccount;
-import org.sid.ebankbackend.entities.Customer;
-import org.sid.ebankbackend.entities.SavingAccount;
+import org.sid.ebankbackend.entities.*;
 import org.sid.ebankbackend.enums.AccountStatus;
 import org.sid.ebankbackend.enums.OperationType;
 import org.sid.ebankbackend.repositories.AccountOperationRepository;
 import org.sid.ebankbackend.repositories.BankAccountRepository;
 import org.sid.ebankbackend.repositories.CustomerRepository;
+import org.sid.ebankbackend.services.BankService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.UUID;
@@ -25,6 +24,12 @@ public class EbankBackendApplication {
         SpringApplication.run(EbankBackendApplication.class, args);
     }
     @Bean
+    CommandLineRunner commandLineRunner(BankService bankService){
+        return args->{
+            bankService.consulter();
+        };
+    }
+    //@Bean
     CommandLineRunner start(CustomerRepository customerRepository,
                             BankAccountRepository bankAccountRepository,
                             AccountOperationRepository accountOperationRepository){
@@ -64,7 +69,11 @@ public class EbankBackendApplication {
                     accountOperation.setBankAccount(acc);
                     accountOperationRepository.save(accountOperation);
                 }
+
+
+
             });
+
         };
     }
 
