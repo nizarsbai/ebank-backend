@@ -1,5 +1,9 @@
 package org.sid.ebankbackend;
 
+import org.sid.ebankbackend.dtos.BankAccountDTO;
+import org.sid.ebankbackend.dtos.CurrentBankAccountDTO;
+import org.sid.ebankbackend.dtos.CustomerDTO;
+import org.sid.ebankbackend.dtos.SavingBankAccountDTO;
 import org.sid.ebankbackend.entities.*;
 import org.sid.ebankbackend.enums.AccountStatus;
 import org.sid.ebankbackend.enums.OperationType;
@@ -30,30 +34,35 @@ public class EbankBackendApplication {
     }
     @Bean
     CommandLineRunner commandLineRunner(BankAccountService bankAccountService){
-        return args->{
-            Stream.of("Hassan","Imane","Mohammed").forEach(name->{
-                Customer customer=new Customer();
+        return args -> {
+            Stream.of("Hassan","Imane","Mohamed").forEach(name->{
+                CustomerDTO customer=new CustomerDTO();
                 customer.setName(name);
                 customer.setEmail(name+"@gmail.com");
                 bankAccountService.saveCustomer(customer);
             });
-            bankAccountService.listCustomers().forEach(customer ->{
+            bankAccountService.listCustomers().forEach(customer->{
                 try {
                     bankAccountService.saveCurrentBankAccount(Math.random()*90000,9000,customer.getId());
                     bankAccountService.saveSavingBankAccount(Math.random()*120000,5.5,customer.getId());
-                    List<BankAccount> bankAccounts = bankAccountService.bankAccountList();
-                    for (BankAccount bankAccount:bankAccounts){
-                        for (int i = 0; i < 10; i++) {
-                            bankAccountService.credit(bankAccount.getId(),10000+Math.random()*120000,"Credit");
-                            bankAccountService.debit(bankAccount.getId(),1000+Math.random()*9000,"Debit");
-                        }
-                    }
+
                 } catch (CustomerNotFoundException e) {
-                    e.printStackTrace();
-                } catch (BankAccountNotFoundException | BalanceNotSufficientException e) {
                     e.printStackTrace();
                 }
             });
+            List<BankAccountDTO> bankAccounts = bankAccountService.bankAccountList();
+            for (BankAccountDTO bankAccount:bankAccounts){
+                for (int i = 0; i <10 ; i++) {
+                    String accountId;
+                    if(bankAccount instanceof SavingBankAccountDTO){
+                        accountId=((SavingBankAccountDTO) bankAccount).getId();
+                    } else{
+                        accountId=((CurrentBankAccountDTO) bankAccount).getId();
+                    }
+                    bankAccountService.credit(accountId,10000+Math.random()*120000,"Credit");
+                    bankAccountService.debit(accountId,1000+Math.random()*9000,"Debit");
+                }
+            }
         };
     }
     //@Bean
@@ -68,7 +77,7 @@ public class EbankBackendApplication {
                 customerRepository.save(customer);
             });
             customerRepository.findAll().forEach(cust->{
-                CurrentAccount currentAccount= new CurrentAccount();
+                CurrentAccount currentAccount=new CurrentAccount();
                 currentAccount.setId(UUID.randomUUID().toString());
                 currentAccount.setBalance(Math.random()*90000);
                 currentAccount.setCreatedAt(new Date());
@@ -77,7 +86,7 @@ public class EbankBackendApplication {
                 currentAccount.setOverDraft(9000);
                 bankAccountRepository.save(currentAccount);
 
-                SavingAccount savingAccount= new SavingAccount();
+                SavingAccount savingAccount=new SavingAccount();
                 savingAccount.setId(UUID.randomUUID().toString());
                 savingAccount.setBalance(Math.random()*90000);
                 savingAccount.setCreatedAt(new Date());
@@ -88,20 +97,18 @@ public class EbankBackendApplication {
 
             });
             bankAccountRepository.findAll().forEach(acc->{
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i <10 ; i++) {
                     AccountOperation accountOperation=new AccountOperation();
                     accountOperation.setOperationDate(new Date());
                     accountOperation.setAmount(Math.random()*12000);
-                    accountOperation.setType(Math.random()>0.5? OperationType.DEBIT:OperationType.CREDIT);
+                    accountOperation.setType(Math.random()>0.5? OperationType.DEBIT: OperationType.CREDIT);
                     accountOperation.setBankAccount(acc);
                     accountOperationRepository.save(accountOperation);
                 }
 
-
-
             });
-
         };
+
     }
 
 }
